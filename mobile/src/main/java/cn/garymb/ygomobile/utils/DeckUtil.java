@@ -5,6 +5,7 @@ import static cn.garymb.ygomobile.ui.home.HomeActivity.released_code_list;
 import static cn.garymb.ygomobile.utils.ComparisonTableUtil.newIDsArray;
 import static cn.garymb.ygomobile.utils.ComparisonTableUtil.oldIDsArray;
 
+import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
@@ -248,7 +249,7 @@ public class DeckUtil {
         return -1;
     }
 
-    public static void downloadInfo(Context context) {
+    public static void downloadInfo(Activity activity) {
         DownloadUtil.get()
             .download("https://h5mota.com/ygocrawler/query.php",
                 AppsSettings.get().getResourcePath(),
@@ -257,7 +258,9 @@ public class DeckUtil {
                     public void onDownloadSuccess(File file) {
                         Log.i("DeckUtil", "Successfully download info!");
 
-                        Toast.makeText(context, "用户信息加载完毕", Toast.LENGTH_SHORT).show();
+                        activity.runOnUiThread(() -> {
+                            Toast.makeText(activity, "用户信息加载完毕", Toast.LENGTH_SHORT).show();
+                        });
                     }
 
                     @Override
@@ -268,7 +271,9 @@ public class DeckUtil {
                     public void onDownloadFailed(Exception e) {
                         Log.e("DeckUtil", "Unable to download info!", e);
 
-                        Toast.makeText(context, "用户信息加载失败！", Toast.LENGTH_SHORT).show();
+                        activity.runOnUiThread(() -> {
+                            Toast.makeText(activity, "用户信息加载失败！", Toast.LENGTH_SHORT).show();
+                        });
                     }
                 });
     }
