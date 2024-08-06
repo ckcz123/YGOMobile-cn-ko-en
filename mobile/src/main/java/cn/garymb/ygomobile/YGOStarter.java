@@ -17,11 +17,15 @@ import android.view.WindowManager;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import cn.garymb.ygomobile.utils.DeckUtil;
+import cn.garymb.ygomobile.utils.FileUtils;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.signature.MediaStoreSignature;
 
 import java.io.File;
+import java.net.URI;
+import java.nio.channels.Channels;
 import java.util.HashMap;
 
 import cn.garymb.ygodata.YGOGameOptions;
@@ -169,6 +173,9 @@ public class YGOStarter {
      *                 或者(播放完不退出游戏)：-k -r 1111.yrp
      */
     public static void startGame(Activity activity, YGOGameOptions options, String... args) {
+        // Download card...
+        DeckUtil.downloadInfo(activity);
+
         //如果距离上次加入游戏的时间大于1秒才处理
         if (System.currentTimeMillis() - lasttime >= 1000) {
             lasttime = System.currentTimeMillis();

@@ -5,7 +5,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "cn.garymb.ygomobile"
+        applicationId "cn.garymb.ygomobile.ckcz"
         minSdkVersion 21
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 29
@@ -23,7 +23,7 @@ android {
     }
     productFlavors {
         cn {
-            resValue 'string', 'app_name', 'YGOMobile'
+            resValue 'string', 'app_name', 'YGOMobile2'
             applicationIdSuffix ".CN"
         }
     }

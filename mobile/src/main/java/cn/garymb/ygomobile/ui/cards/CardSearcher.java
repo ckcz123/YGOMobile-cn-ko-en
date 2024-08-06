@@ -3,8 +3,11 @@ package cn.garymb.ygomobile.ui.cards;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -14,6 +17,9 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView.OnEditorActionListener;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +33,7 @@ import cn.garymb.ygomobile.ui.adapters.SimpleSpinnerAdapter;
 import cn.garymb.ygomobile.ui.adapters.SimpleSpinnerItem;
 import cn.garymb.ygomobile.ui.plus.DialogPlus;
 import cn.garymb.ygomobile.ui.plus.VUiKit;
+import ocgcore.CardManager;
 import ocgcore.DataManager;
 import ocgcore.LimitManager;
 import ocgcore.StringManager;
@@ -140,6 +147,7 @@ public class CardSearcher implements View.OnClickListener {
             } else {
                 showFavorites(true);
             }
+            // initSetCode();
         });
 
         LinkMarkerButton.setOnClickListener(v -> {
@@ -272,6 +280,51 @@ public class CardSearcher implements View.OnClickListener {
 
             }
         });
+    }
+
+    private void initSetCode() {
+        List<CardSet> setnames = mStringManager.getCardSets();
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        boolean first = true;
+        SparseArray<Card> cards = DataManager.get().getCardManager().getAllCards();
+        for (CardSet cardSet : setnames) {
+            if (!first) {
+                builder.append(",");
+            }
+            first = false;
+            long code = cardSet.getCode();
+            String name = cardSet.getName();
+            builder.append("\n  ");
+            builder.append("{\"code\": ").append(code);
+            builder.append(", \"name\": \"").append(name).append("\"");
+            builder.append(", \"data\": [");
+
+            boolean second = true;
+            for (int i = 0; i < cards.size(); ++i) {
+                Card card = cards.valueAt(i);
+                if (card.isSetCode(code)) {
+                    if (!second) {
+                        builder.append(", ");
+                    }
+                    second = false;
+                    builder.append(card.Code);
+                }
+            }
+            builder.append("]}");
+        }
+        builder.append("\n]\n");
+
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
+            try {
+                Files.write(
+                    new File(AppsSettings.get().getResourcePath(), "setcode.json").toPath(),
+                    builder.toString().getBytes(StandardCharsets.UTF_8));
+                Log.i(TAG, "Successfully write setcode.json!");
+            } catch (Exception e) {
+                Log.e(TAG, "Unable to write setcode.json!", e);
+            }
+        }
     }
 
     public void showFavorites(boolean showList) {

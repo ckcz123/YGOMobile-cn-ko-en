@@ -676,6 +676,37 @@ void DuelClient::HandleSTOCPacketLan(unsigned char* data, int len) {
 				BufferIO::CopyWStr(mainGame->stHostPrepDuelist[1]->getToolTipText().c_str(), mainGame->dInfo.hostname, 20);
 				BufferIO::CopyWStr(mainGame->stHostPrepDuelist[0]->getToolTipText().c_str(), mainGame->dInfo.clientname, 20);
 			}
+
+			const wchar_t* clientName = mainGame->dInfo.clientname;
+			wchar_t message[100];
+			myswprintf(message, L"[INFO]: 寻找用户： %ls", clientName);
+			mainGame->AddChatMsg(message, 14);
+
+			FILE* fp = fopen("info.txt", "r");
+			if (fp) {
+				bool found = false;
+				wchar_t line[200];
+				while (fgetws(line, 200, fp) != NULL) {
+					wchar_t name[100];
+					wchar_t hand[100];
+					wchar_t deck[100];
+					fwscanf(fp, L"%l[^\t\n]\t%ls\t%ls", name, hand, deck);
+
+					if (wcscmp(name, clientName) == 0) {
+						found = true;
+						myswprintf(message, L"[INFO]: 猜拳信息： %ls", hand);
+						mainGame->AddChatMsg(message, 14);
+						myswprintf(message, L"[INFO]: 卡组信息： %ls", deck);
+						mainGame->AddChatMsg(message, 14);
+						break;
+					}
+				}
+				if (!found) {
+					mainGame->AddChatMsg(L"[INFO]: 找不到对应用户！", 14);
+				}
+				fclose(fp);
+			}
+
 		} else {
 			if(selftype > 3) {
 				mainGame->dInfo.player_type = NETPLAYER_TYPE_OBSERVER;

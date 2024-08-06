@@ -9,13 +9,18 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
+import android.widget.Toast;
+import cn.garymb.ygomobile.utils.DownloadUtil.OnDownloadListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -241,6 +246,31 @@ public class DeckUtil {
         }
 
         return -1;
+    }
+
+    public static void downloadInfo(Context context) {
+        DownloadUtil.get()
+            .download("https://h5mota.com/ygocrawler/query.php",
+                AppsSettings.get().getResourcePath(),
+                "info.txt", new OnDownloadListener() {
+                    @Override
+                    public void onDownloadSuccess(File file) {
+                        Log.i("DeckUtil", "Successfully download info!");
+
+                        Toast.makeText(context, "用户信息加载完毕", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onDownloading(int progress) {
+                    }
+
+                    @Override
+                    public void onDownloadFailed(Exception e) {
+                        Log.e("DeckUtil", "Unable to download info!", e);
+
+                        Toast.makeText(context, "用户信息加载失败！", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
 }
