@@ -259,7 +259,7 @@ public class DeckUtil {
                         Log.i("DeckUtil", "Successfully download info!");
 
                         activity.runOnUiThread(() -> {
-                            Toast.makeText(activity, "用户信息加载完毕", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "用户信息加载完毕", Toast.LENGTH_LONG).show();
                         });
                     }
 
@@ -272,7 +272,7 @@ public class DeckUtil {
                         Log.e("DeckUtil", "Unable to download info!", e);
 
                         activity.runOnUiThread(() -> {
-                            Toast.makeText(activity, "用户信息加载失败！", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "用户信息加载失败！", Toast.LENGTH_LONG).show();
                         });
                     }
                 });
