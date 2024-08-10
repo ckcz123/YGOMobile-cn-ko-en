@@ -27,6 +27,11 @@ android {
             applicationIdSuffix ".CN"
         }
     }
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+        }
+    }
     buildTypes {
         debug {
             debuggable true
