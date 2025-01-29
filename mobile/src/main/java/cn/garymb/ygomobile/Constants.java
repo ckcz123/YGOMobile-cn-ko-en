@@ -22,6 +22,8 @@ public interface Constants {
     int PREF_DEF_IMAGE_QUALITY = 1;
     String PREF_DATA_LANGUAGE = "pref_key_game_data_language";
     int PREF_DEF_DATA_LANGUAGE = -1;
+    String PREF_KEY_WORDS_SPLIT = "pref_key_words_split";
+    int PREF_DEF_KEY_WORDS_SPLIT = 1;
     String PREF_GAME_FONT = "pref_key_game_font_name";
     String PREF_USE_EXTRA_CARD_CARDS = "settings_game_diy_card_db";
     boolean PREF_DEF_USE_EXTRA_CARD_CARDS = true;
@@ -42,6 +44,7 @@ public interface Constants {
     String PREF_CHANGE_LOG = "pref_key_change_log";
     String PREF_CHECK_UPDATE = "pref_key_about_check_update";
     String PREF_RESET_GAME_RES = "pref_key_reset_game_res";
+    String PREF_USER_PRIVACY_POLICY = "pref_user_privacy_policy";
     String PREF_JOIN_QQ = "pref_key_join_qq";
     String PREF_DEL_EX = "pref_key_settings_delete_ex";
     String PREF_LAST_ROOM_LIST = "pref_key_lastroom_list";
@@ -78,6 +81,9 @@ public interface Constants {
     String CORE_SOUND_PATH = "sound";
     String CORE_SKIN_PATH = "textures";
     String CORE_SKIN_PENDULUM_PATH = CORE_SKIN_PATH + "/extra";
+    String CORE_AVATAR_PATH = CORE_SKIN_PATH + "/extra/avatars";
+    String CORE_COVER_PATH = CORE_SKIN_PATH + "/extra/covers";
+    String CORE_BG_PATH = CORE_SKIN_PATH + "/extra/bgs";
     String CORE_DECK_PATH = "deck";
     String CORE_PACK_PATH = "pack";
     String CORE_EXPANSIONS = "expansions";
@@ -100,6 +106,9 @@ public interface Constants {
     String CORE_SKIN_AVATAR_OPPONENT = "opponent.jpg";
     String UNKNOWN_IMAGE = "unknown.jpg";
     String YDK_FILE_EX = ".ydk";
+    String YRP_FILE_EX = ".yrp";
+    String YPK_FILE_EX = ".ypk";
+    String LUA_FILE_EX = ".lua";
     int[] CORE_SKIN_BG_SIZE = new int[]{1920, 1080};
 
     int[] CORE_SKIN_CARD_MINI_SIZE = new int[]{44, 64};
@@ -165,14 +174,10 @@ public interface Constants {
     String ID3 = "#pre_release_code";
     //String URL_YGO233_DOWNLOAD_LINK = "https://ygo233.com/download/ygomobile";
     String URL_YGO233_ADVANCE = "";//"https://ygo233.com/pre#pre_release_cards";//关闭233先行卡服务器，但不要删除该字段，许多未调用的遗留代码使用该contant
-    String URL_YGO233_DATAVER = "https://cdn02.moecube.com:444/ygopro-super-pre/data/version.txt";
+    String URL_CN_DATAVER = "https://cdn02.moecube.com:444/ygopro-super-pre/data/version.txt";
     String URL_PRE_CARD = "https://cdn02.moecube.com:444/ygopro-super-pre/data/test-release.json";
-//    String URL_YGO233_DATAVER = "http://192.168.0.103:8006/ygo/version.txt";
-//    String URL_PRE_CARD = "http://192.168.0.103:8006/ygo/test-release.json";
-
-
-    String URL_YGO233_FILE = "https://cdn02.moecube.com:444/ygopro-super-pre/archive/ygopro-super-pre.ypk";
-    String URL_YGO233_FILE_ALT = "https://cdn02.moecube.com:444/ygopro-super-pre/archive/ygopro-super-pre.ypk";
+    String URL_SUPERPRE_CN_FILE = "https://cdn02.moecube.com:444/ygopro-super-pre/archive/ygopro-super-pre.ypk";
+    String URL_SUPERPRE_CN_FILE_ALT = "https://cdn02.moecube.com:444/ygopro-super-pre/archive/ygopro-super-pre.ypk";
     String URL_YGO233_BUG_REPORT = "https://ygo233.com/pre#faq";
     int PORT_Mycard_Super_Pre_Server = 888;
     String URL_Mycard_Super_Pre_Server = "mygo.superpre.pro";

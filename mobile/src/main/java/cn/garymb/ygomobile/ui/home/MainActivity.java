@@ -35,6 +35,7 @@ import cn.garymb.ygomobile.ui.plus.DialogPlus;
 import cn.garymb.ygomobile.ui.plus.VUiKit;
 import cn.garymb.ygomobile.utils.FileUtils;
 import cn.garymb.ygomobile.utils.NetUtils;
+import cn.garymb.ygomobile.utils.YGOUtil;
 
 public class MainActivity extends HomeActivity implements BottomNavigationBar.OnTabSelectedListener {
     private final String[] PERMISSIONS = {
@@ -64,7 +65,7 @@ public class MainActivity extends HomeActivity implements BottomNavigationBar.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 //        for(int i=0;i<permissions.length;i++){
 //            if(grantResults[i] == PackageManager.PERMISSION_DENIED){
-//                showToast(getString(R.string.tip_no_permission,permissions[i]));
+//                YGOUtil.showTextToast(getString(R.string.tip_no_permission,permissions[i]));
 //                break;
 //            }
 //        }
@@ -116,7 +117,7 @@ public class MainActivity extends HomeActivity implements BottomNavigationBar.On
                     });
                     dialog.setOnDismissListener(dialogInterface -> {
                         DialogPlus dialogplus = new DialogPlus(this);
-                        File oldypk = new File(AppsSettings.get().getExpansionsPath() + "/" + officialExCardPackageName + ".ypk");
+                        File oldypk = new File(AppsSettings.get().getExpansionsPath() + "/" + officialExCardPackageName + Constants.YPK_FILE_EX);
                         if (oldypk.exists()) {
                             FileUtils.deleteFile(oldypk);
                             dialogplus.setMessage(R.string.tip_ypk_is_deleted);
@@ -148,9 +149,9 @@ public class MainActivity extends HomeActivity implements BottomNavigationBar.On
             try {
                 FileUtils.copyDir(ORI_DECK, AppsSettings.get().getDeckDir(), false);
             } catch (Throwable e) {
-                Toast.makeText(MainActivity.this, e + "", Toast.LENGTH_SHORT).show();
+                YGOUtil.showTextToast(e + "", Toast.LENGTH_LONG);
             }
-            Toast.makeText(MainActivity.this, R.string.done, Toast.LENGTH_SHORT).show();
+            YGOUtil.showTextToast(R.string.done);
         }
     }
 
@@ -203,7 +204,7 @@ public class MainActivity extends HomeActivity implements BottomNavigationBar.On
         if (enableStart) {
             YGOStarter.startGame(this, null);
         } else {
-            VUiKit.show(this, R.string.dont_start_game);
+            YGOUtil.showTextToast(R.string.dont_start_game);
         }
     }
 

@@ -133,6 +133,7 @@
     <string name="linkmarker">◀링크 마커▶</string>>
     <string name="searching">검색 중</string>
     <string name="card_faq">FAQ</string>
+    <string name="card_related">관련 카드</string>
     <string name="no_webbrowser">웹 브라우저가 설치되지 않았습니다</string>
     <string name="load_game">게임 시작 중</string>
 
@@ -345,6 +346,8 @@
     <string name="file_installed">파일을 불러왔습니다</string>
     <string name="settings_screen_padding">화면 스타일</string>
     <string name="tip_load_cdb_error">데이터를 불러오는 중에 오류가 발생했습니다.</string>
+    <string name="tip_download_failed">저장 실패</string>
+    <string name="tip_download_OK">에 저장됨</string>
     <string name="replay">리플레이 보기</string>
     <string name="bot_mode">AI 모드</string>
     <string name="personal">개인 설정</string>
@@ -353,6 +356,7 @@
     <string name="login_succeed">채팅 방에 로그인되었습니다</string>
     <string name="reChatJoining">다시 로그인 중\.\.\.</string>
     <string name="settings_data_language">언어</string>
+    <string name="settings_key_words_split">다중 키워드 검색 (공백으로 구분)</string>
     <string name="settings_data_language_about">게임 데이터 언어를 변경합니다.</string>
     <string name="find_in_page">" 발견:"</string>
     <string name="tip_card_info_diff">몇몇 특수한 카드들을 제외하고 8자리 코드번호를 초과하는 카드들은 프리릴리즈 카드로, 프리릴리즈카드를 허용하는 서버 에서만 사용이 가능합니다.</string>
@@ -362,4 +366,10 @@
     <string name="Pre_Server_Name">Mycard Super-pre Server</string>
     <string name="tip_ypk_is_deleted">Please upgrade pre-released cards at once</string>
     <string name="tip_superpre_desc">Please upgrade pre-released cards at once</string>
+    <string name="tip_download_ex">새 카드가 있어, 놀러 와!</string>
+    <string name="replay_list">재생 목록</string>
+    <string name="user_privacy_policy">사용자 개인정보 보호정책</string>
+    <string name="about_user_privacy_policy">이 앱에서 사용하는 권한에 대한 설명</string>
+    <string name="open">打开</string>
+    <string name="web_warn_save_deck">打开卡组将关闭正在浏览的网页，是否关闭网页并打开卡组</string>
 </resources>

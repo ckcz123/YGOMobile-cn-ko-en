@@ -53,12 +53,6 @@
 #define mywcscat wcscat_x
 #endif
 
-#include <wchar.h>
-template<size_t N, typename... TR>
-inline int swprintf(wchar_t(&buf)[N], const wchar_t* fmt, TR... args) {
-	return swprintf(buf, N, fmt, args...);
-}
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -75,6 +69,11 @@ inline int swprintf(wchar_t(&buf)[N], const wchar_t* fmt, TR... args) {
 #include "../ocgcore/ocgapi.h"
 #include "../ocgcore/common.h"
 
+template<size_t N, typename... TR>
+inline int swprintf(wchar_t(&buf)[N], const wchar_t* fmt, TR... args) {
+	return std::swprintf(buf, N, fmt, args...);
+}
+
 #if defined(_IRR_ANDROID_PLATFORM_)
 #include <android/CustomShaderConstantSetCallBack.h>
 #endif
@@ -87,11 +86,14 @@ inline int swprintf(wchar_t(&buf)[N], const wchar_t* fmt, TR... args) {
 #endif // UNICODE
 #endif
 
-inline FILE* myfopen(const char* filename, const char* mode) {
+inline FILE* myfopen(const wchar_t* filename, const char* mode) {
 	FILE* fp{};
-	fp = fopen(filename, mode);
+	char fname[1024]{};
+	BufferIO::EncodeUTF8(filename, fname);
+	fp = fopen(fname, mode);
 	return fp;
 }
+
 
 #include <irrlicht.h>
 using namespace irr;

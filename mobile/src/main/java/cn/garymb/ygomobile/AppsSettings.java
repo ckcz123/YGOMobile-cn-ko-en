@@ -18,6 +18,7 @@ import static cn.garymb.ygomobile.Constants.DEF_PREF_KEEP_SCALE;
 import static cn.garymb.ygomobile.Constants.DEF_PREF_NOTCH_HEIGHT;
 import static cn.garymb.ygomobile.Constants.DEF_PREF_ONLY_GAME;
 import static cn.garymb.ygomobile.Constants.DEF_PREF_READ_EX;
+import static cn.garymb.ygomobile.Constants.PREF_DEF_KEY_WORDS_SPLIT;
 import static cn.garymb.ygomobile.Constants.PREF_DEF_DATA_LANGUAGE;
 import static cn.garymb.ygomobile.Constants.PREF_DEF_IMMERSIVE_MODE;
 import static cn.garymb.ygomobile.Constants.PREF_DEF_SENSOR_REFRESH;
@@ -41,8 +42,12 @@ import android.graphics.Point;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
+
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.MediaStoreSignature;
 
 import org.json.JSONArray;
 
@@ -54,13 +59,13 @@ import java.util.List;
 import java.util.Locale;
 
 import cn.garymb.ygomobile.core.IrrlichtBridge;
-import cn.garymb.ygomobile.lite.BuildConfig;
 import cn.garymb.ygomobile.lite.R;
 import cn.garymb.ygomobile.ui.settings.SharedPreferencesPlus;
 import cn.garymb.ygomobile.utils.DeckUtil;
-import cn.garymb.ygomobile.utils.DensityUtils;
 import cn.garymb.ygomobile.utils.FileUtils;
 import cn.garymb.ygomobile.utils.IOUtils;
+import cn.garymb.ygomobile.utils.YGOUtil;
+import cn.garymb.ygomobile.utils.glide.GlideCompat;
 
 /**
  * 静态类
@@ -195,7 +200,7 @@ public class AppsSettings {
         }
         int ret = Math.min(w, h);
         //测试代码，曲面屏左右2变需要留空白，但是游戏画面比例不对，需要修改c那边代码
-        int fix_h = DensityUtils.dp2px(context, getScreenPadding());
+        int fix_h = YGOUtil.dp2px(getScreenPadding());
         Log.d(IrrlichtBridge.TAG, "screen padding=" + fix_h);
         return ret - fix_h * 2;
     }
@@ -247,7 +252,7 @@ public class AppsSettings {
                         return false;
                     }
                     String s_name = file.getName().toLowerCase();
-                    return s_name.endsWith(".zip") || s_name.endsWith(".ypk");
+                    return s_name.endsWith(".zip") || s_name.endsWith(Constants.YPK_FILE_EX);
                 });
     }
 
@@ -377,6 +382,24 @@ public class AppsSettings {
     }
 
     /***
+     * 关键字分隔方法
+     */
+    public void setKeyWordsSplit(int split) {
+        mSharedPreferences.putString(Constants.PREF_KEY_WORDS_SPLIT, "" + split);
+    }
+
+    /***
+     * 关键字分隔方法
+     */
+    public int getKeyWordsSplit() {
+        try {
+            return Integer.valueOf(mSharedPreferences.getString(Constants.PREF_KEY_WORDS_SPLIT, "" + PREF_DEF_KEY_WORDS_SPLIT));
+        } catch (Exception e) {
+            return PREF_DEF_KEY_WORDS_SPLIT;
+        }
+    }
+
+    /***
      * 资料语言
      */
     public void setDataLanguage(int language) {
@@ -475,7 +498,17 @@ public class AppsSettings {
     public String getCoreSkinPath() {
         return new File(getResourcePath(), Constants.CORE_SKIN_PATH).getAbsolutePath();
     }
+    public String getAvatarPath() {
+        return new File(getResourcePath(), Constants.CORE_AVATAR_PATH).getAbsolutePath();
+    }
 
+    public String getCoverPath() {
+        return new File(getResourcePath(), Constants.CORE_COVER_PATH).getAbsolutePath();
+    }
+
+    public String getBgPath() {
+        return new File(getResourcePath(), Constants.CORE_BG_PATH).getAbsolutePath();
+    }
     /***
      * 字体路径
      */
@@ -738,6 +771,30 @@ public class AppsSettings {
         }
 //        Log.i("kk", "saveTemp:" + array);
         mSharedPreferences.putString(Constants.PREF_LAST_ROOM_LIST, array.toString());
+    }
+
+    public void setImage(String outFile, int outWidth, int outHeight, ImageView imageView) {
+        File img = new File(outFile);
+        if (img.exists()) {
+            GlideCompat.with(context).load(img)
+                    .signature(new MediaStoreSignature("image/*", img.lastModified(), 0))
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .override(outWidth, outHeight)
+                    .into(imageView);
+        }
+    }
+
+    public enum keyWordsSplitEnum {
+        Percent(0, "%%"),
+        Space(1, "Space");
+
+        public Integer code;
+        public String name;
+
+        keyWordsSplitEnum(Integer code, String name) {
+            this.code = code;
+            this.name = name;
+        }
     }
 
     public enum languageEnum {

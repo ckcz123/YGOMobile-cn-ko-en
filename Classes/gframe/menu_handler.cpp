@@ -22,7 +22,7 @@ void UpdateDeck() {
 	BufferIO::EncodeUTF8(mainGame->gameConf.lastdeck, linebuf);
 	android::setLastDeck(mainGame->appMain, linebuf);
 		
-	unsigned char deckbuf[1024];
+	unsigned char deckbuf[1024]{};
 	auto pdeck = deckbuf;
 	BufferIO::WriteInt32(pdeck, deckManager.current_deck.main.size() + deckManager.current_deck.extra.size());
 	BufferIO::WriteInt32(pdeck, deckManager.current_deck.side.size());
@@ -149,16 +149,19 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				mainGame->TrimText(mainGame->ebJoinHost);
 				mainGame->TrimText(mainGame->ebJoinPort);
 				char ip[20];
-				const wchar_t* pstr = mainGame->ebJoinHost->getText();
-				BufferIO::CopyWStr(pstr, ip, 16);
+				wchar_t pstr[100];
+				wchar_t portstr[10];
+				BufferIO::CopyWideString(mainGame->ebJoinHost->getText(), pstr);
+				BufferIO::CopyWideString(mainGame->ebJoinPort->getText(), portstr);
+				BufferIO::EncodeUTF8(pstr, ip);
 				unsigned int remote_addr = htonl(inet_addr(ip));
 				if(remote_addr == -1) {
 					char hostname[100];
 					char port[6];
-					BufferIO::CopyWStr(pstr, hostname, 100);
-					BufferIO::CopyWStr(mainGame->ebJoinPort->getText(), port, 6);
+					BufferIO::EncodeUTF8(pstr, hostname);
+					BufferIO::EncodeUTF8(portstr, port);
 					struct evutil_addrinfo hints;
-					struct evutil_addrinfo *answer = NULL;
+					struct evutil_addrinfo *answer = nullptr;
 					std::memset(&hints, 0, sizeof hints);
 					hints.ai_family = AF_INET;
 					hints.ai_socktype = SOCK_STREAM;
@@ -178,9 +181,9 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 						evutil_freeaddrinfo(answer);
 					}
 				}
-				unsigned int remote_port = wcstol(mainGame->ebJoinPort->getText(), nullptr, 10);
-				BufferIO::CopyWStr(pstr, mainGame->gameConf.lasthost, 100);
-				BufferIO::CopyWStr(mainGame->ebJoinPort->getText(), mainGame->gameConf.lastport, 20);
+				unsigned int remote_port = std::wcstol(portstr, nullptr, 10);
+				BufferIO::CopyWideString(pstr, mainGame->gameConf.lasthost);
+				BufferIO::CopyWideString(portstr, mainGame->gameConf.lastport);
 				if(DuelClient::StartClient(remote_addr, remote_port, false)) {
 					mainGame->btnCreateHost->setEnabled(false);
 					mainGame->btnJoinHost->setEnabled(false);
@@ -209,7 +212,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 			}
 			case BUTTON_HOST_CONFIRM: {
 				bot_mode = false;
-				BufferIO::CopyWStr(mainGame->ebServerName->getText(), mainGame->gameConf.gamename, 20);
+				BufferIO::CopyWideString(mainGame->ebServerName->getText(), mainGame->gameConf.gamename);
 				if(!NetServer::StartServer(mainGame->gameConf.serverport)) {
 					mainGame->soundManager->PlaySoundEffect(SoundManager::SFX::INFO);
 					mainGame->env->addMessageBox(L"", dataManager.GetSysString(1402));
@@ -323,10 +326,13 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_LOAD_REPLAY: {
-					if(mainGame->lstReplayList->getSelected() == -1)
-						break;
-					if(!ReplayMode::cur_replay.OpenReplay(mainGame->lstReplayList->getListItem(mainGame->lstReplayList->getSelected())))
-						break;
+				auto selected = mainGame->lstReplayList->getSelected();
+				if(selected == -1)
+					break;
+				wchar_t replay_path[256]{};
+				myswprintf(replay_path, L"./replay/%ls", mainGame->lstReplayList->getListItem(selected));
+				if (!ReplayMode::cur_replay.OpenReplay(replay_path))
+					break;
 				mainGame->ClearCardInfo();
 				mainGame->imgCard->setScaleImage(true);
 				mainGame->wCardImg->setVisible(true);
@@ -343,7 +349,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				mainGame->dField.Clear();
 				mainGame->HideElement(mainGame->wReplay);
 				mainGame->device->setEventReceiver(&mainGame->dField);
-				unsigned int start_turn = wcstol(mainGame->ebRepStartTurn->getText(), nullptr, 10);
+				unsigned int start_turn = std::wcstol(mainGame->ebRepStartTurn->getText(), nullptr, 10);
 				if(start_turn == 1)
 					start_turn = 0;
 				ReplayMode::StartReplay(start_turn);
@@ -374,9 +380,9 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 					prev_operation = id;
 					prev_sel = sel;
 #ifdef _IRR_ANDROID_PLATFORM_
-					ALOGD("1share replay file=%s", name);
+					ALOGD("cc menu_handler: 1share replay file=%s", name);
 					android::OnShareFile(mainGame->appMain, "yrp", name);
-					ALOGD("2after share replay file:index=%d", sel);
+					ALOGD("cc menu_handler: 2after share replay file:index=%d", sel);
 #endif
 					break;
 				}
@@ -399,14 +405,17 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_EXPORT_DECK: {
-				if(mainGame->lstReplayList->getSelected() == -1)
+				auto selected = mainGame->lstReplayList->getSelected();
+				if(selected == -1)
 					break;
 				Replay replay;
 				wchar_t ex_filename[256]{};
 				wchar_t namebuf[4][20]{};
 				wchar_t filename[256]{};
-				myswprintf(ex_filename, L"%ls", mainGame->lstReplayList->getListItem(mainGame->lstReplayList->getSelected()));
-				if(!replay.OpenReplay(ex_filename))
+				wchar_t replay_path[256]{};
+				BufferIO::CopyWideString(mainGame->lstReplayList->getListItem(selected), ex_filename);
+				myswprintf(replay_path, L"./replay/%ls", ex_filename);
+				if (!replay.OpenReplay(replay_path))
 					break;
 				const ReplayHeader& rh = replay.pheader;
 				if(rh.flag & REPLAY_SINGLE_MODE)
@@ -532,8 +541,8 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				mainGame->HideElement(mainGame->wReplaySave);
 				if(prev_operation == BUTTON_RENAME_REPLAY) {
 					wchar_t newname[256];
-					BufferIO::CopyWStr(mainGame->ebRSName->getText(), newname, 256);
-					if(wcsncasecmp(newname + wcslen(newname) - 4, L".yrp", 4)) {
+					BufferIO::CopyWideString(mainGame->ebRSName->getText(), newname);
+					if(wcsncasecmp(newname + std::wcslen(newname) - 4, L".yrp", 4)) {
 						myswprintf(newname, L"%ls.yrp", mainGame->ebRSName->getText());
 					}
 					if(Replay::RenameReplay(mainGame->lstReplayList->getListItem(prev_sel), newname)) {
@@ -629,9 +638,13 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				int sel = mainGame->lstReplayList->getSelected();
 				if(sel == -1)
 					break;
-				if(!ReplayMode::cur_replay.OpenReplay(mainGame->lstReplayList->getListItem(sel)))
+				wchar_t replay_path[256]{};
+				myswprintf(replay_path, L"./replay/%ls", mainGame->lstReplayList->getListItem(sel));
+				if (!ReplayMode::cur_replay.OpenReplay(replay_path)) {
+					mainGame->stReplayInfo->setText(L"");
 					break;
-				wchar_t infobuf[256];
+				}
+				wchar_t infobuf[256]{};
 				std::wstring repinfo;
 				time_t curtime;
 				if(ReplayMode::cur_replay.pheader.flag & REPLAY_UNIFORM)
@@ -639,7 +652,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				else
 					curtime = ReplayMode::cur_replay.pheader.seed;
 				tm* st = localtime(&curtime);
-				wcsftime(infobuf, 256, L"%Y/%m/%d %H:%M:%S\n", st);
+				std::wcsftime(infobuf, 256, L"%Y/%m/%d %H:%M:%S\n", st);
 				repinfo.append(infobuf);
 				wchar_t namebuf[4][20]{};
 				ReplayMode::cur_replay.ReadName(namebuf[0]);
@@ -664,9 +677,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				const wchar_t* name = mainGame->lstSinglePlayList->getListItem(sel);
 				wchar_t fname[256];
 				myswprintf(fname, L"./single/%ls", name);
-				char fullname[256]{};
-				BufferIO::EncodeUTF8(fname, fullname);
-				FILE* fp = myfopen(fullname, "rb");
+				FILE* fp = myfopen(fname, "rb");
 				if(!fp) {
 					mainGame->stSinglePlayInfo->setText(L"");
 					break;

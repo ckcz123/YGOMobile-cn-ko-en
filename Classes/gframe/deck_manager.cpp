@@ -1,6 +1,5 @@
 #include "deck_manager.h"
 #include "myfilesystem.h"
-#include "data_manager.h"
 #include "network.h"
 #include "game.h"
 
@@ -89,11 +88,11 @@ int DeckManager::CheckDeck(Deck& deck, int lfhash, int rule) {
 	if(!list)
 		return 0;
 	int dc = 0;
-	if((int)deck.main.size() < DECK_MIN_SIZE || (int)deck.main.size() > DECK_MAX_SIZE)
+	if(deck.main.size() < DECK_MIN_SIZE || deck.main.size() > DECK_MAX_SIZE)
 		return ((unsigned)DECKERROR_MAINCOUNT << 28) + deck.main.size();
-	if((int)deck.extra.size() > EXTRA_MAX_SIZE)
+	if(deck.extra.size() > EXTRA_MAX_SIZE)
 		return ((unsigned)DECKERROR_EXTRACOUNT << 28) + deck.extra.size();
-	if((int)deck.side.size() > SIDE_MAX_SIZE)
+	if(deck.side.size() > SIDE_MAX_SIZE)
 		return ((unsigned)DECKERROR_SIDECOUNT << 28) + deck.side.size();
 	if (rule < 0 || rule >= 6)
 		return 0;
@@ -187,7 +186,7 @@ int DeckManager::LoadDeck(Deck& deck, int* dbuf, int mainc, int sidec, bool is_p
 }
 int DeckManager::LoadDeck(Deck& deck, std::istringstream& deckStream, bool is_packlist) {
 	int ct = 0, mainc = 0, sidec = 0, code = 0;
-	int cardlist[300]{};
+	int cardlist[PACK_MAX_SIZE]{};
 	bool is_side = false;
 	std::string linebuf;
 	while (std::getline(deckStream, linebuf, '\n') && ct < (int)(sizeof cardlist / sizeof cardlist[0])) {
@@ -266,7 +265,7 @@ void DeckManager::GetDeckFile(wchar_t* ret, irr::gui::IGUIComboBox* cbCategory, 
 	wchar_t filepath[256];
 	wchar_t catepath[256];
 	const wchar_t* deckname = cbDeck->getItem(cbDeck->getSelected());
-	if(deckname != NULL) {
+	if(deckname != nullptr) {
 		GetCategoryPath(catepath, cbCategory->getSelected(), cbCategory->getText(), cbCategory == mainGame->cbDBCategory);
 		myswprintf(filepath, L"%ls/%ls.ydk", catepath, deckname);
 		BufferIO::CopyWStr(filepath, ret, 256);
@@ -276,40 +275,36 @@ void DeckManager::GetDeckFile(wchar_t* ret, irr::gui::IGUIComboBox* cbCategory, 
 	}
 }
 FILE* DeckManager::OpenDeckFile(const wchar_t* file, const char* mode) {
-	char fullname[256]{};
-	BufferIO::EncodeUTF8(file, fullname);
-	FILE* fp = myfopen(fullname, mode);
+	FILE* fp = myfopen(file, mode);
 	return fp;
 }
 IReadFile* DeckManager::OpenDeckReader(const wchar_t* file) {
 	char file2[256];
 	BufferIO::EncodeUTF8(file, file2);
-	IReadFile* reader = dataManager.FileSystem->createAndOpenFile(file2);
+	IReadFile* reader = DataManager::FileSystem->createAndOpenFile(file2);
 	return reader;
 }
 bool DeckManager::LoadCurrentDeck(const wchar_t* file, bool is_packlist) {
 	current_deck.clear();
 	IReadFile* reader = OpenDeckReader(file);
 	if(!reader) {
-		wchar_t localfile[64];
+		wchar_t localfile[256];
 		myswprintf(localfile, L"./deck/%ls.ydk", file);
 		reader = OpenDeckReader(localfile);
 	}
 	if(!reader && !wcsncasecmp(file, L"./pack", 6)) {
-		wchar_t zipfile[64];
+		wchar_t zipfile[256];
 		myswprintf(zipfile, L"%ls", file + 2);
 		reader = OpenDeckReader(zipfile);
 	}
 	if(!reader)
 		return false;
-	auto size = reader->getSize();
-	if(size >= (int)sizeof deckBuffer) {
-		reader->drop();
+	std::memset(deckBuffer, 0, sizeof deckBuffer);
+	int size = reader->read(deckBuffer, sizeof deckBuffer);
+	reader->drop();
+	if (size >= (int)sizeof deckBuffer) {
 		return false;
 	}
-	std::memset(deckBuffer, 0, sizeof deckBuffer);
-	reader->read(deckBuffer, size);
-	reader->drop();
 	std::istringstream deckStream(deckBuffer);
 	LoadDeck(current_deck, deckStream, is_packlist);
 	return true;  // the above LoadDeck has return value but we ignore it here for now
@@ -342,7 +337,7 @@ bool DeckManager::SaveDeck(Deck& deck, const wchar_t* file) {
 	return true;
 }
 bool DeckManager::DeleteDeck(const wchar_t* file) {
-#ifdef WIN32
+#ifdef _WIN32
 	BOOL result = DeleteFileW(file);
 	return !!result;
 #else

@@ -2,7 +2,7 @@
 #define DECKMANAGER_H
 
 #include "config.h"
-#include "client_card.h"
+#include "data_manager.h"
 #include <unordered_map>
 #include <vector>
 #include <sstream>
@@ -12,6 +12,7 @@ namespace ygo {
 	constexpr int DECK_MIN_SIZE = 40;
 	constexpr int EXTRA_MAX_SIZE = 15;
 	constexpr int SIDE_MAX_SIZE = 15;
+	constexpr int PACK_MAX_SIZE = 1000;
 
 struct LFList {
 	unsigned int hash{};
