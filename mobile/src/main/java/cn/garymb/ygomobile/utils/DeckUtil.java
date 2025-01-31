@@ -252,10 +252,14 @@ public class DeckUtil {
         DownloadUtil.get()
             .download("https://h5mota.com/ygocrawler/query.php",
                 AppsSettings.get().getResourcePath(),
-                "info.txt", new OnDownloadListener() {
+                "info_tmp.txt", new OnDownloadListener() {
                     @Override
                     public void onDownloadSuccess(File file) {
                         Log.i("DeckUtil", "Successfully download info!");
+
+                        File destFile = new File(file.getParent(), "info.txt");
+                        destFile.delete();
+                        file.renameTo(destFile);
 
                         activity.runOnUiThread(() -> {
                             Toast.makeText(activity, "用户信息加载完毕", Toast.LENGTH_LONG).show();
