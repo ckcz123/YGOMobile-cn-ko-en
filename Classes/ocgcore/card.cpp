@@ -90,9 +90,9 @@ bool card::card_operation_sort(card* c1, card* c2) {
 	} else if (c1->current.location == LOCATION_DECK && pduel->game_field->is_select_hide_deck_sequence(cp1)) {
 		// if deck reversed and the card being at the top, it should go first
 		if(pduel->game_field->core.deck_reversed) {
-			if(c1->current.sequence == pduel->game_field->player[cp1].list_main.size() - 1)
+			if(c1 == pduel->game_field->player[cp1].list_main.back())
 				return false;
-			if(c2->current.sequence == pduel->game_field->player[cp2].list_main.size() - 1)
+			if(c2 == pduel->game_field->player[cp2].list_main.back())
 				return true;
 		}
 		// faceup deck cards should go at the very first
@@ -974,13 +974,13 @@ uint32_t card::get_level() {
 		temp.level = level + up;
 	}
 	level += up;
-	if(level < 1 && (get_type() & TYPE_MONSTER))
+	if (level < 1)
 		level = 1;
 	temp.level = UINT32_MAX;
 	return level;
 }
 uint32_t card::get_rank() {
-	if(!(data.type & TYPE_XYZ) || (status & STATUS_NO_LEVEL))
+	if (!(data.type & TYPE_XYZ))
 		return 0;
 	if(assume_type == ASSUME_RANK)
 		return assume_value;
@@ -1007,13 +1007,13 @@ uint32_t card::get_rank() {
 		temp.level = rank + up;
 	}
 	rank += up;
-	if(rank < 1 && (get_type() & TYPE_MONSTER))
+	if (rank < 1)
 		rank = 1;
 	temp.level = UINT32_MAX;
 	return rank;
 }
 uint32_t card::get_link() {
-	if(!(data.type & TYPE_LINK) || (status & STATUS_NO_LEVEL))
+	if (!(data.type & TYPE_LINK))
 		return 0;
 	return data.level;
 }
@@ -1044,22 +1044,43 @@ uint32_t card::get_ritual_level(card* pcard) {
 uint32_t card::check_xyz_level(card* pcard, uint32_t lv) {
 	if(status & STATUS_NO_LEVEL)
 		return 0;
+	int32_t min_count = 0;
+	effect_set mset;
+	filter_effect(EFFECT_XYZ_MIN_COUNT, &mset);
+	for (int32_t i = 0; i < mset.size(); ++i) {
+		pduel->lua->add_param(this, PARAM_TYPE_CARD);
+		pduel->lua->add_param(pcard, PARAM_TYPE_CARD);
+		int32_t count = mset[i]->get_value(2);
+		if (count > min_count)
+			min_count = count;
+	}
+	if (min_count > 0xf)
+		min_count = 0xf;
 	effect_set eset;
 	filter_effect(EFFECT_XYZ_LEVEL, &eset);
 	if(!eset.size()) {
-		uint32_t lev = get_level();
-		if(lev == lv)
-			return lev;
+		uint32_t card_lv = get_level();
+		if (card_lv == lv)
+			return (card_lv & MAX_XYZ_LEVEL) | ((uint32_t)min_count << 12);
 		return 0;
 	}
 	for(int32_t i = 0; i < eset.size(); ++i) {
 		pduel->lua->add_param(this, PARAM_TYPE_CARD);
 		pduel->lua->add_param(pcard, PARAM_TYPE_CARD);
 		uint32_t lev = eset[i]->get_value(2);
-		if(((lev & 0xfff) == lv))
-			return lev & 0xffff;
-		if(((lev >> 16) & 0xfff) == lv)
-			return (lev >> 16) & 0xffff;
+		uint16_t lv1 = lev & MAX_XYZ_LEVEL;
+		uint16_t count1 = (lev & 0xf000) >> 12;
+		if (count1 < min_count)
+			count1 = min_count;
+		if (lv1 == lv)
+			return lv1 | ((uint32_t)count1 << 12);
+		lev >>= 16;
+		uint16_t lv2 = lev & MAX_XYZ_LEVEL;
+		uint16_t count2 = (lev & 0xf000) >> 12;
+		if (count2 < min_count)
+			count2 = min_count;
+		if (lv2 == lv)
+			return lv2 | ((uint32_t)count2 << 12);
 	}
 	return 0;
 }
@@ -1367,7 +1388,7 @@ int32_t card::is_extra_link_state() {
 		uint32_t checking = linked_zone & ~checked;
 		if(!checking)
 			return FALSE;
-		uint32_t rightmost = checking & (-checking);
+		uint32_t rightmost = checking & (~checking + 1);
 		checked |= rightmost;
 		if(rightmost < 0x10000U) {
 			for(int32_t i = 0; i < 7; ++i) {
@@ -2587,11 +2608,11 @@ void card::filter_effect_container(const effect_container& container, uint32_t c
 }
 void card::filter_effect(uint32_t code, effect_set* eset, uint8_t sort) {
 	filter_effect_container(single_effect, code, default_single_filter, *eset);
-	for (const auto& pcard : equiping_cards)
+	for (auto& pcard : equiping_cards)
 		filter_effect_container(pcard->equip_effect, code, default_equip_filter, *eset);
-	for (const auto& pcard : effect_target_owner)
+	for (auto& pcard : effect_target_owner)
 		filter_effect_container(pcard->target_effect, code, default_target_filter, *eset);
-	for (const auto& pcard : xyz_materials)
+	for (auto& pcard : xyz_materials)
 		filter_effect_container(pcard->xmaterial_effect, code, default_xmaterial_filter, *eset);
 	filter_effect_container(pduel->game_field->effects.aura_effect, code, default_aura_filter, *eset);
 	if(sort)
@@ -2599,17 +2620,17 @@ void card::filter_effect(uint32_t code, effect_set* eset, uint8_t sort) {
 }
 void card::filter_single_continuous_effect(uint32_t code, effect_set* eset, uint8_t sort) {
 	filter_effect_container(single_effect, code, accept_filter, *eset);
-	for (const auto& pcard : equiping_cards)
+	for (auto& pcard : equiping_cards)
 		filter_effect_container(pcard->equip_effect, code, accept_filter, *eset);
 	auto target_filter = [](card* c, effect* peffect) -> bool {
 		return peffect->is_target(c);
 	};
-	for (const auto& pcard : effect_target_owner)
+	for (auto& pcard : effect_target_owner)
 		filter_effect_container(pcard->target_effect, code, target_filter, *eset);
 	auto xmaterial_filter = [](card* c, effect* peffect) -> bool {
 		return !(peffect->type & EFFECT_TYPE_FIELD);
 	};
-	for (const auto& pcard : xyz_materials)
+	for (auto& pcard : xyz_materials)
 		filter_effect_container(pcard->xmaterial_effect, code, xmaterial_filter, *eset);
 	if(sort)
 		eset->sort();
@@ -2622,7 +2643,7 @@ void card::filter_self_effect(uint32_t code, effect_set* eset, uint8_t sort) {
 	auto xmaterial_filter = [](card* c, effect* peffect) -> bool {
 		return !(peffect->type & EFFECT_TYPE_FIELD);
 	};
-	for (const auto& pcard : xyz_materials)
+	for (auto& pcard : xyz_materials)
 		filter_effect_container(pcard->xmaterial_effect, code, xmaterial_filter, *eset);
 	if (sort)
 		eset->sort();
@@ -2631,17 +2652,17 @@ void card::filter_self_effect(uint32_t code, effect_set* eset, uint8_t sort) {
 void card::filter_immune_effect() {
 	immune_effect.clear();
 	filter_effect_container(single_effect, EFFECT_IMMUNE_EFFECT, accept_filter, immune_effect);
-	for (const auto& pcard : equiping_cards)
+	for (auto& pcard : equiping_cards)
 		filter_effect_container(pcard->equip_effect, EFFECT_IMMUNE_EFFECT, accept_filter, immune_effect);
 	auto target_filter = [](card* c, effect* peffect) -> bool {
 		return peffect->is_target(c);
 	};
-	for (const auto& pcard : effect_target_owner)
+	for (auto& pcard : effect_target_owner)
 		filter_effect_container(pcard->target_effect, EFFECT_IMMUNE_EFFECT, target_filter, immune_effect);
 	auto xmaterial_filter = [](card* c, effect* peffect) -> bool {
 		return !(peffect->type & EFFECT_TYPE_FIELD);
 	};
-	for (const auto& pcard : xyz_materials)
+	for (auto& pcard : xyz_materials)
 		filter_effect_container(pcard->xmaterial_effect, EFFECT_IMMUNE_EFFECT, xmaterial_filter, immune_effect);
 	filter_effect_container(pduel->game_field->effects.aura_effect, EFFECT_IMMUNE_EFFECT, target_filter, immune_effect);
 	immune_effect.sort();
@@ -2909,17 +2930,17 @@ effect* card::is_affected_by_effect(uint32_t code) {
 	effect* peffect = find_effect(single_effect, code, default_single_filter);
 	if (peffect)
 		return peffect;
-	for (const auto& pcard : equiping_cards) {
+	for (auto& pcard : equiping_cards) {
 		peffect = find_effect(pcard->equip_effect, code, default_equip_filter);
 		if (peffect)
 			return peffect;
 	}
-	for (const auto& pcard : effect_target_owner) {
+	for (auto& pcard : effect_target_owner) {
 		peffect = find_effect(pcard->target_effect, code, default_target_filter);
 		if (peffect)
 			return peffect;
 	}
-	for (const auto& pcard : xyz_materials) {
+	for (auto& pcard : xyz_materials) {
 		peffect = find_effect(pcard->xmaterial_effect, code, default_xmaterial_filter);
 		if (peffect)
 			return peffect;
@@ -2939,7 +2960,7 @@ effect* card::is_affected_by_effect(int32_t code, card* target) {
 	auto equip_filter = [](card* c, effect* peffect, card* target) -> bool {
 		return default_equip_filter(c, peffect) && peffect->get_value(target);
 	};
-	for (const auto& pcard : equiping_cards) {
+	for (auto& pcard : equiping_cards) {
 		peffect = find_effect_with_target(pcard->equip_effect, code, equip_filter, target);
 		if (peffect)
 			return peffect;
@@ -2947,7 +2968,7 @@ effect* card::is_affected_by_effect(int32_t code, card* target) {
 	auto target_filter = [](card* c, effect* peffect, card* target) -> bool {
 		return default_target_filter(c, peffect) && peffect->get_value(target);
 	};
-	for (const auto& pcard : effect_target_owner) {
+	for (auto& pcard : effect_target_owner) {
 		peffect = find_effect_with_target(pcard->target_effect, code, target_filter, target);
 		if (peffect)
 			return peffect;
@@ -2955,7 +2976,7 @@ effect* card::is_affected_by_effect(int32_t code, card* target) {
 	auto xmaterial_filter = [](card* c, effect* peffect, card* target) -> bool {
 		return default_xmaterial_filter(c, peffect) && peffect->get_value(target);
 	};
-	for (const auto& pcard : xyz_materials) {
+	for (auto& pcard : xyz_materials) {
 		peffect = find_effect_with_target(pcard->xmaterial_effect, code, xmaterial_filter, target);
 		if (peffect)
 			return peffect;
@@ -4130,7 +4151,7 @@ int32_t card::is_can_be_link_material(card* scard) {
 * @param filter Lua function filter(e)
 */
 int32_t card::is_original_effect_property(int32_t filter) {
-	for (const auto& peffect : initial_effect) {
+	for (auto& peffect : initial_effect) {
 		pduel->lua->add_param(peffect, PARAM_TYPE_EFFECT);
 		if (pduel->lua->check_condition(filter, 1))
 			return TRUE;
@@ -4141,7 +4162,7 @@ int32_t card::is_original_effect_property(int32_t filter) {
 * @param filter Lua function filter(e)
 */
 int32_t card::is_effect_property(int32_t filter) {
-	for (const auto& peffect : initial_effect) {
+	for (auto& peffect : initial_effect) {
 		if (current.is_location(LOCATION_MZONE) && !peffect->is_monster_effect())
 			continue;
 		if (current.is_location(LOCATION_SZONE) && !peffect->in_range(this))
@@ -4150,7 +4171,7 @@ int32_t card::is_effect_property(int32_t filter) {
 		if(pduel->lua->check_condition(filter, 1))
 			return TRUE;
 	}
-	for (const auto& peffect : owning_effect) {
+	for (auto& peffect : owning_effect) {
 		if (current.is_location(LOCATION_MZONE) && !peffect->is_monster_effect())
 			continue;
 		if (current.is_location(LOCATION_SZONE) && !peffect->in_range(this))

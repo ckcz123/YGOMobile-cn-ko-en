@@ -322,6 +322,7 @@
     <string name="restore_deck">기기에서 백업된 덱을 발견했습니다. 복원하시겠습니까?</string>
     <string name="explain_permission">
 		이 앱의 기능을 사용하려면 다음과 같은 필수 권한이 적용됩니다：
+        \n 클립보드 권한: 덱 코드 및 대전 코드 읽기 필수
         \n 저장소 권한：백업, 덱 복원, 사용자 지정 배경, 아바타, 카드 커버 필요</string>
     <string name="guide_menu">기능 메뉴：\n앱의 주요 기능은 다음 과 같습니다</string>
     <string name="guide_mycard">MyCard：\n랭킹, 듀얼 관전, 채팅 및 포럼 등 \n 다양한 듀얼 서비스를 제공합니다</string>
@@ -370,6 +371,6 @@
     <string name="replay_list">재생 목록</string>
     <string name="user_privacy_policy">사용자 개인정보 보호정책</string>
     <string name="about_user_privacy_policy">이 앱에서 사용하는 권한에 대한 설명</string>
-    <string name="open">打开</string>
-    <string name="web_warn_save_deck">打开卡组将关闭正在浏览的网页，是否关闭网页并打开卡组</string>
+    <string name="open">덱을 열기</string>
+    <string name="web_warn_save_deck">덱을 열면 현재 보고 있는 웹 페이지가 닫힙니다. 웹 페이지를 닫고 덱을 열까요?</string>
 </resources>

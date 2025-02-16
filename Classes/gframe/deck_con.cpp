@@ -213,7 +213,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				if(*dname == 0)
 					break;
 				int sel = -1;
-				for(size_t i = 0; i < mainGame->cbDBDecks->getItemCount(); ++i) {
+				for(int i = 0; i < (int)mainGame->cbDBDecks->getItemCount(); ++i) {
 					if(!std::wcscmp(dname, mainGame->cbDBDecks->getItem(i))) {
 						sel = i;
 						break;
@@ -1403,13 +1403,12 @@ void DeckBuilder::FilterCards() {
 			all,
 			name,
 			setcode
-		} type;
-		bool exclude;
-		element_t(): type(type_t::all), exclude(false) {}
+		} type{ type_t::all };
+		bool exclude{ false };
 	};
 	const wchar_t* pstr = mainGame->ebCardName->getText();
 	int trycode = BufferIO::GetVal(pstr);
-	std::wstring str = std::wstring(pstr);
+	std::wstring str{ pstr };
 	std::vector<element_t> query_elements;
 	if(mainGame->gameConf.search_multiple_keywords) {
 		const wchar_t separator = mainGame->gameConf.search_multiple_keywords == 1 ? L' ' : L'+';
