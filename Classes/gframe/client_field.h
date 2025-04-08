@@ -80,11 +80,11 @@ public:
 	std::vector<ClientCard*> display_cards;
 	std::vector<int> sort_list;
 	std::map<int, int> player_desc_hints[2];
-	bool grave_act{ false };
-	bool remove_act{ false };
-	bool deck_act{ false };
-	bool extra_act{ false };
-	bool pzone_act[2]{};
+	bool grave_act[2]{ false };
+	bool remove_act[2]{ false };
+	bool deck_act[2]{ false };
+	bool extra_act[2]{ false };
+	bool pzone_act[2]{ false };
 	bool conti_act{ false };
 	bool chain_forced{ false };
 	ChainInfo current_chain;
@@ -100,6 +100,7 @@ public:
 	~ClientField();
 	void Clear();
 	void Initial(int player, int deckc, int extrac);
+	void ResetSequence(std::vector<ClientCard*>& list, bool reset_height);
 	ClientCard* GetCard(int controler, int location, int sequence, int sub_seq = 0);
 	void AddCard(ClientCard* pcard, int controler, int location, int sequence);
 	ClientCard* RemoveCard(int controler, int location, int sequence);
